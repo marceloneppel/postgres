@@ -2384,6 +2384,8 @@ setup_bin_paths(const char *argv0)
 		if (find_my_exec(argv0, full_path) < 0)
 			strlcpy(full_path, progname, sizeof(full_path));
 
+        pg_log_error("ret: \"%d\"", ret);
+
 		if (ret == -1)
 			pg_log_error("The program \"%s\" is needed by %s but was not found in the\n"
 						 "same directory as \"%s\".\n"
@@ -2396,6 +2398,9 @@ setup_bin_paths(const char *argv0)
 						 "postgres", full_path, progname);
 		exit(1);
 	}
+//    pg_log_error("Neppel The program \"%s\" is needed by %s but was not found in the\n"
+//                 "Check your installation.",
+//                 "postgres", progname);
 
 	/* store binary directory */
 	strcpy(bin_path, backend_exec);

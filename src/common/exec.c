@@ -145,6 +145,7 @@ find_my_exec(const char *argv0, char *retpath)
 
 	if (!getcwd(cwd, MAXPGPATH))
 	{
+        printf("1");
 		log_error(errcode_for_file_access(),
 				  _("could not identify current directory: %m"));
 		return -1;
@@ -162,10 +163,13 @@ find_my_exec(const char *argv0, char *retpath)
 		canonicalize_path(retpath);
 
 		if (validate_exec(retpath) == 0)
+            printf("1.1\n");
+            printf("%s\n", retpath);
 			return resolve_symlinks(retpath);
 
 		log_error(errcode(ERRCODE_WRONG_OBJECT_TYPE),
 				  _("invalid binary \"%s\""), retpath);
+        printf("2");
 		return -1;
 	}
 
@@ -173,6 +177,7 @@ find_my_exec(const char *argv0, char *retpath)
 	/* Win32 checks the current directory first for names without slashes */
 	join_path_components(retpath, cwd, argv0);
 	if (validate_exec(retpath) == 0)
+        printf("2.1");
 		return resolve_symlinks(retpath);
 #endif
 
@@ -210,6 +215,7 @@ find_my_exec(const char *argv0, char *retpath)
 			switch (validate_exec(retpath))
 			{
 				case 0:			/* found ok */
+                    printf("3");
 					return resolve_symlinks(retpath);
 				case -1:		/* wasn't even a candidate, keep looking */
 					break;
@@ -224,6 +230,7 @@ find_my_exec(const char *argv0, char *retpath)
 
 	log_error(errcode(ERRCODE_UNDEFINED_FILE),
 			  _("could not find a \"%s\" to execute"), argv0);
+    printf("4");
 	return -1;
 }
 
@@ -264,6 +271,7 @@ resolve_symlinks(char *path)
 	{
 		log_error(errcode_for_file_access(),
 				  _("could not identify current directory: %m"));
+        printf("b 1.1.1\n");
 		return -1;
 	}
 
@@ -280,6 +288,7 @@ resolve_symlinks(char *path)
 			{
 				log_error(errcode_for_file_access(),
 						  _("could not change directory to \"%s\": %m"), path);
+                printf("c 1.1.1\n");
 				return -1;
 			}
 			fname = lsep + 1;
@@ -297,6 +306,7 @@ resolve_symlinks(char *path)
 		{
 			log_error(errcode_for_file_access(),
 					  _("could not read symbolic link \"%s\": %m"), fname);
+            printf("d 1.1.1\n");
 			return -1;
 		}
 		link_buf[rllen] = '\0';
@@ -310,6 +320,7 @@ resolve_symlinks(char *path)
 	{
 		log_error(errcode_for_file_access(),
 				  _("could not identify current directory: %m"));
+        printf("e 1.1.1\n");
 		return -1;
 	}
 	join_path_components(path, path, link_buf);
@@ -319,10 +330,11 @@ resolve_symlinks(char *path)
 	{
 		log_error(errcode_for_file_access(),
 				  _("could not change directory to \"%s\": %m"), orig_wd);
+        printf("f 1.1.1\n");
 		return -1;
 	}
 #endif							/* HAVE_READLINK */
-
+    printf("g 1.1.1\n");
 	return 0;
 }
 
@@ -339,6 +351,8 @@ find_other_exec(const char *argv0, const char *target,
 	char		line[MAXPGPATH];
 
 	if (find_my_exec(argv0, retpath) < 0)
+        log_error(errcode(ERRCODE_SYSTEM_ERROR),
+                  "could not find own program binary");
 		return -1;
 
 	/* Trim off program name and keep just directory */
@@ -350,15 +364,22 @@ find_other_exec(const char *argv0, const char *target,
 			 "/%s%s", target, EXE);
 
 	if (validate_exec(retpath) != 0)
-		return -1;
+        log_error(errcode(ERRCODE_SYSTEM_ERROR),
+                  "could not find \"%s\"", retpath);
+		return -2;
 
 	snprintf(cmd, sizeof(cmd), "\"%s\" -V", retpath);
 
 	if (!pipe_read_line(cmd, line, sizeof(line)))
-		return -1;
+        log_error(errcode(ERRCODE_SYSTEM_ERROR),
+                  "could not read version from \"%s\"", retpath);
+		return -3;
 
 	if (strcmp(line, versionstr) != 0)
-		return -2;
+        log_error(errcode(ERRCODE_SYSTEM_ERROR),
+                  "version mismatch between \"%s\" and \"%s\"",
+                  retpath, versionstr);
+		return -4;
 
 	return 0;
 }
