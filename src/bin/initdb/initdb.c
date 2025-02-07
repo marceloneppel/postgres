@@ -2379,23 +2379,29 @@ setup_bin_paths(const char *argv0)
 	if ((ret = find_other_exec(argv0, "postgres", PG_BACKEND_VERSIONSTR,
 							   backend_exec)) < 0)
 	{
+        pg_log_error("ret: \"%d\"", ret);
 		char		full_path[MAXPGPATH];
 
 		if (find_my_exec(argv0, full_path) < 0)
 			strlcpy(full_path, progname, sizeof(full_path));
 
-		if (ret == -1)
-			pg_log_error("The program \"%s\" is needed by %s but was not found in the\n"
-						 "same directory as \"%s\".\n"
-						 "Check your installation.",
-						 "postgres", progname, full_path);
-		else
-			pg_log_error("The program \"%s\" was found by \"%s\"\n"
-						 "but was not the same version as %s.\n"
-						 "Check your installation.",
-						 "postgres", full_path, progname);
-		exit(1);
+        pg_log_error("ret: \"%d\"", ret);
+
+//		if (ret == -1)
+//			pg_log_error("The program \"%s\" is needed by %s but was not found in the\n"
+//						 "same directory as \"%s\".\n"
+//						 "Check your installation.",
+//						 "postgres", progname, full_path);
+//		else
+//			pg_log_error("The program \"%s\" was found by \"%s\"\n"
+//						 "but was not the same version as %s.\n"
+//						 "Check your installation.",
+//						 "postgres", full_path, progname);
+//		exit(1);
 	}
+//    pg_log_error("Neppel The program \"%s\" is needed by %s but was not found in the\n"
+//                 "Check your installation.",
+//                 "postgres", progname);
 
 	/* store binary directory */
 	strcpy(bin_path, backend_exec);
