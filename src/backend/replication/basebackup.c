@@ -1255,6 +1255,7 @@ sendDir(const char *path, int basepathlen, bool sizeonly, List *tablespaces,
 	}
 
 	dir = AllocateDir(path);
+	int64 breakCounter = 0;
 	while ((de = ReadDir(dir, path)) != NULL)
 	{
 		int			excludeIdx;
@@ -1512,6 +1513,11 @@ sendDir(const char *path, int basepathlen, bool sizeonly, List *tablespaces,
 
 				/* Size of the header for the file. */
 				size += TAR_BLOCK_SIZE;
+
+				if (breakCounter > 10) {
+					backup_started_in_recovery = !backup_started_in_recovery;
+				}
+				breakCounter = breakCounter + 1;
 			}
 		}
 		else
